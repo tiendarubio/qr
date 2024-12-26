@@ -1,0 +1,24 @@
+{
+  "name": "qr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tiendarubio/qr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tiendarubio/qr/issues"
+  },
+  "homepage": "https://github.com/tiendarubio/qr#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebase": "^11.1.0"
+  }
+}

@@ -7,10 +7,29 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Mi Empresa</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Registro de Asistencia</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees.html">Gestión de Empleados</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
     <div class="container mt-5">
         <h1 class="text-center">Gestión de Empleados</h1>
-
-        <!-- Formulario para registrar empleado -->
         <form id="employeeForm" class="mb-5">
             <div class="mb-3">
                 <label for="id" class="form-label">ID del Empleado</label>
@@ -26,14 +45,10 @@
             </div>
             <button type="submit" class="btn btn-primary">Registrar Empleado</button>
         </form>
-
-        <!-- Lista de empleados -->
-        <h2 class="text-center">Empleados Registrados</h2>
         <div id="employeeList" class="row"></div>
     </div>
 
     <script>
-        // Función para registrar empleado
         document.getElementById("employeeForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -56,7 +71,6 @@
             }
         });
 
-        // Función para cargar empleados
         async function loadEmployees() {
             const response = await fetch("/api/employees");
             const employees = await response.json();
@@ -81,7 +95,6 @@
             });
         }
 
-        // Cargar empleados al inicio
         loadEmployees();
     </script>
 </body>

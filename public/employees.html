@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Gestión de Empleados</h1>
+
+        <!-- Formulario para registrar empleado -->
+        <form id="employeeForm" class="mb-5">
+            <div class="mb-3">
+                <label for="id" class="form-label">ID del Empleado</label>
+                <input type="text" id="id" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" id="nombre" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Registrar Empleado</button>
+        </form>
+
+        <!-- Lista de empleados -->
+        <h2 class="text-center">Empleados Registrados</h2>
+        <div id="employeeList" class="row"></div>
+    </div>
+
+    <script>
+        // Función para registrar empleado
+        document.getElementById("employeeForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById("id").value;
+            const nombre = document.getElementById("nombre").value;
+            const email = document.getElementById("email").value;
+
+            const response = await fetch("/api/employees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, nombre, email }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message);
+                loadEmployees();
+            } else {
+                alert("Error al registrar empleado.");
+            }
+        });
+
+        // Función para cargar empleados
+        async function loadEmployees() {
+            const response = await fetch("/api/employees");
+            const employees = await response.json();
+
+            const employeeList = document.getElementById("employeeList");
+            employeeList.innerHTML = "";
+
+            employees.forEach((employee) => {
+                const col = document.createElement("div");
+                col.className = "col-md-4 mb-4";
+                col.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">${employee.nombre}</h5>
+                            <p class="card-text">ID: ${employee.id}</p>
+                            <p class="card-text">Email: ${employee.email}</p>
+                            <img src="${employee.qrCode}" alt="QR Code" class="img-fluid">
+                        </div>
+                    </div>
+                `;
+                employeeList.appendChild(col);
+            });
+        }
+
+        // Cargar empleados al inicio
+        loadEmployees();
+    </script>
+</body>
+</html>

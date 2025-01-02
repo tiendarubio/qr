@@ -1,50 +1,35 @@
-const express = require("express");
-const app = express();
-const bodyParser = require("body-parser");
-const db = require("../firebaseConfig"); // Firestore instance
+const db = require("../firebaseConfig");
+const QRCode = require("qrcode");
 
-app.use(bodyParser.json());
+export default async (req, res) => {
+  if (req.method === "POST") {
+    const { id, nombre, email } = req.body;
 
-// Registrar un nuevo empleado
-app.post("/api/employees", async (req, res) => {
-  const { id, nombre, email } = req.body;
+    try {
+      const qrData = `${id};entry`;
+      const qrCode = await QRCode.toDataURL(qrData);
 
-  try {
-    if (!id || !nombre) {
-      throw new Error("El ID y el nombre son obligatorios");
+      await db.collection("employees").doc(id).set({
+        id,
+        nombre,
+        email,
+        qrCode,
+      });
+
+      res.status(200).json({ message: "Empleado registrado correctamente.", qrCode });
+    } catch (error) {
+      res.status(500).json({ message: "Error al registrar empleado.", error });
     }
+  } else if (req.method === "GET") {
+    try {
+      const snapshot = await db.collection("employees").get();
+      const employees = snapshot.docs.map((doc) => doc.data());
 
-    const ref = db.collection("employees").doc(id);
-    await ref.set({
-      id,
-      nombre,
-      email: email || null,
-      createdAt: new Date().toISOString(),
-    });
-
-    res.status(200).json({ message: "Empleado registrado correctamente." });
-  } catch (error) {
-    console.error("Error al registrar empleado:", error.message);
-    res.status(500).json({ message: "Error al registrar empleado.", error: error.message });
-  }
-});
-
-// Obtener la lista de empleados
-app.get("/api/employees", async (req, res) => {
-  try {
-    const snapshot = await db.collection("employees").get();
-
-    if (snapshot.empty) {
-      res.status(200).json([]);
-      return;
+      res.status(200).json(employees);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener empleados.", error });
     }
-
-    const employees = snapshot.docs.map((doc) => doc.data());
-    res.status(200).json(employees);
-  } catch (error) {
-    console.error("Error al obtener empleados:", error.message);
-    res.status(500).json({ message: "Error al obtener empleados.", error: error.message });
+  } else {
+    res.status(405).json({ message: "Método no permitido." });
   }
-});
-
-module.exports = app;
+};

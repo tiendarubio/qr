@@ -7,34 +7,27 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Mi Empresa</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/index.html">Registro de Asistencia</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/employees.html">Gestión de Empleados</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Registro de Asistencia</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/employees.html">Gestión de Empleados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/history.html">Historial</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Contenido Principal -->
     <div class="container mt-5">
         <h1 class="text-center">Gestión de Empleados</h1>
-
-        <!-- Formulario para registrar empleado -->
-        <form id="employeeForm" class="mb-5">
+        <form id="employeeForm">
             <div class="mb-3">
-                <label for="id" class="form-label">ID del Empleado</label>
+                <label for="id" class="form-label">ID</label>
                 <input type="text" id="id" class="form-control" required>
             </div>
             <div class="mb-3">
@@ -42,77 +35,52 @@
                 <input type="text" id="nombre" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">Correo Electrónico</label>
                 <input type="email" id="email" class="form-control">
             </div>
             <button type="submit" class="btn btn-primary">Registrar Empleado</button>
         </form>
 
-        <!-- Lista de empleados -->
-        <h2 class="text-center">Empleados Registrados</h2>
-        <div id="employeeList" class="row"></div>
+        <div id="employeeList" class="mt-4"></div>
     </div>
 
     <script>
         document.getElementById("employeeForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-
             const id = document.getElementById("id").value;
             const nombre = document.getElementById("nombre").value;
             const email = document.getElementById("email").value;
 
-            try {
-                const response = await fetch("/api/employees", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id, nombre, email }),
-                });
+            const response = await fetch("/api/employees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, nombre, email }),
+            });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(data.message);
-                    loadEmployees();
-                } else {
-                    const errorData = await response.json();
-                    alert("Error: " + errorData.message);
-                }
-            } catch (error) {
-                console.error("Error al registrar empleado:", error);
-                alert("Error de conexión con el servidor.");
+            if (response.ok) {
+                alert("Empleado registrado correctamente.");
+                loadEmployees();
+            } else {
+                alert("Error al registrar empleado.");
             }
         });
 
         async function loadEmployees() {
-            try {
-                const response = await fetch("/api/employees");
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    alert("Error: " + errorData.message);
-                    return;
-                }
+            const response = await fetch("/api/employees");
+            const employees = await response.json();
 
-                const employees = await response.json();
-                const employeeList = document.getElementById("employeeList");
-                employeeList.innerHTML = "";
-
-                employees.forEach((employee) => {
-                    const col = document.createElement("div");
-                    col.className = "col-md-4 mb-4";
-                    col.innerHTML = `
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">${employee.nombre}</h5>
-                                <p class="card-text">ID: ${employee.id}</p>
-                                <p class="card-text">Email: ${employee.email || "N/A"}</p>
-                            </div>
+            const employeeList = document.getElementById("employeeList");
+            employeeList.innerHTML = employees
+                .map((emp) => `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5>${emp.nombre}</h5>
+                            <p>ID: ${emp.id}</p>
+                            <p>Email: ${emp.email}</p>
+                            <img src="${emp.qrCode}" class="img-fluid" alt="QR Code">
                         </div>
-                    `;
-                    employeeList.appendChild(col);
-                });
-            } catch (error) {
-                console.error("Error al cargar empleados:", error);
-                alert("Error de conexión con el servidor.");
-            }
+                    </div>
+                `).join("");
         }
 
         loadEmployees();

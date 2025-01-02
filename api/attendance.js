@@ -1,75 +1,58 @@
-const express = require("express");
-const app = express();
-const bodyParser = require("body-parser");
-const db = require("../firebaseConfig"); // Firestore instance
+const db = require("../firebaseConfig");
 
-app.use(bodyParser.json());
-
-// Registrar entrada
-app.post("/api/register-entry", async (req, res) => {
-  const { id, nombre } = req.body;
-
-  try {
+export default async (req, res) => {
+  if (req.method === "POST") {
+    const { id, nombre } = req.body;
     const fecha = new Date().toISOString().split("T")[0];
-    const ref = db.collection("attendance").doc(`${id}_${fecha}`);
-    await ref.set({
-      id,
-      nombre,
-      fecha,
-      entrada: new Date(),
-    });
-    res.status(200).json({ message: "Entrada registrada correctamente." });
-  } catch (error) {
-    res.status(500).json({ message: "Error al registrar entrada.", error });
+    const docId = `${id}_${fecha}`;
+    const docRef = db.collection("attendance").doc(docId);
+
+    try {
+      if (req.url.endsWith("register-entry")) {
+        const docSnapshot = await docRef.get();
+        if (!docSnapshot.exists) {
+          await docRef.set({
+            id,
+            nombre,
+            fecha,
+            entrada: new Date(),
+            almuerzo_inicio: null,
+            almuerzo_fin: null,
+            salida: null,
+          });
+        } else {
+          await docRef.update({ entrada: new Date() });
+        }
+        res.status(200).json({ message: "Entrada registrada correctamente." });
+      } else if (req.url.endsWith("start-lunch")) {
+        await docRef.update({ almuerzo_inicio: new Date() });
+        res.status(200).json({ message: "Inicio de almuerzo registrado." });
+      } else if (req.url.endsWith("end-lunch")) {
+        await docRef.update({ almuerzo_fin: new Date() });
+        res.status(200).json({ message: "Fin de almuerzo registrado." });
+      } else if (req.url.endsWith("register-exit")) {
+        await docRef.update({ salida: new Date() });
+        res.status(200).json({ message: "Salida registrada correctamente." });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Error en la operación.", error });
+    }
+  } else if (req.method === "GET") {
+    const { id } = req.query;
+
+    try {
+      const snapshot = await db
+        .collection("attendance")
+        .where("id", "==", id)
+        .orderBy("fecha", "desc")
+        .get();
+
+      const history = snapshot.docs.map((doc) => doc.data());
+      res.status(200).json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener historial.", error });
+    }
+  } else {
+    res.status(405).json({ message: "Método no permitido." });
   }
-});
-
-// Registrar inicio de almuerzo
-app.post("/api/start-lunch", async (req, res) => {
-  const { id } = req.body;
-
-  try {
-    const fecha = new Date().toISOString().split("T")[0];
-    const ref = db.collection("attendance").doc(`${id}_${fecha}`);
-    await ref.update({
-      almuerzo_inicio: new Date(),
-    });
-    res.status(200).json({ message: "Inicio de almuerzo registrado." });
-  } catch (error) {
-    res.status(500).json({ message: "Error al registrar inicio de almuerzo.", error });
-  }
-});
-
-// Registrar fin de almuerzo
-app.post("/api/end-lunch", async (req, res) => {
-  const { id } = req.body;
-
-  try {
-    const fecha = new Date().toISOString().split("T")[0];
-    const ref = db.collection("attendance").doc(`${id}_${fecha}`);
-    await ref.update({
-      almuerzo_fin: new Date(),
-    });
-    res.status(200).json({ message: "Fin de almuerzo registrado." });
-  } catch (error) {
-    res.status(500).json({ message: "Error al registrar fin de almuerzo.", error });
-  }
-});
-
-// Registrar salida
-app.post("/api/register-exit", async (req, res) => {
-  const { id } = req.body;
-
-  try {
-    const fecha = new Date().toISOString().split("T")[0];
-    const ref = db.collection("attendance").doc(`${id}_${fecha}`);
-    await ref.update({
-      salida: new Date(),
-    });
-    res.status(200).json({ message: "Salida registrada correctamente." });
-  } catch (error) {
-    res.status(500).json({ message: "Error al registrar salida.", error });
-  }
-});
-
-module.exports = app;
+};

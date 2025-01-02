@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Attendance</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 </head>
 <body>
     <!-- Navbar -->
@@ -15,7 +17,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="/index.html">Registro de Asistencia</a>
                     </li>
@@ -23,6 +25,10 @@
                         <a class="nav-link" href="/employees.html">Gestión de Empleados</a>
                     </li>
                 </ul>
+                <div id="connection-status" class="d-flex align-items-center">
+                    <span id="status-circle" style="width: 15px; height: 15px; border-radius: 50%; background-color: grey; margin-right: 10px;"></span>
+                    <span id="status-text">Verificando conexión...</span>
+                </div>
             </div>
         </div>
     </nav>
@@ -36,37 +42,39 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script>
-        const qrReader = new Html5Qrcode("qr-reader");
-
-        const qrCodeSuccessCallback = async (decodedText) => {
-            const [id, action] = decodedText.split(";"); // El QR debe contener el ID y la acción
-            const endpoint = {
-                entry: "/api/register-entry",
-                startLunch: "/api/start-lunch",
-                endLunch: "/api/end-lunch",
-                exit: "/api/register-exit",
-            }[action];
-
-            if (endpoint) {
-                document.getElementById("status").textContent = "Procesando...";
-                const response = await fetch(endpoint, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id }),
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById("status").textContent = result.message;
-                } else {
-                    document.getElementById("status").textContent = "Error en el registro.";
-                }
-            }
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCugpPKk4...",
+            authDomain: "trqr-281d3.firebaseapp.com",
+            projectId: "trqr-281d3",
         };
 
-        qrReader.start({ facingMode: "environment" }, { fps: 10 }, qrCodeSuccessCallback);
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
+
+        // Verificar conexión a Firebase
+        async function checkFirebaseConnection() {
+            const statusCircle = document.getElementById("status-circle");
+            const statusText = document.getElementById("status-text");
+
+            try {
+                // Realizamos una consulta mínima
+                await db.collection("test").limit(1).get();
+
+                // Conexión exitosa
+                statusCircle.style.backgroundColor = "green";
+                statusText.textContent = "Conectado a Firebase";
+            } catch (error) {
+                // Error en la conexión
+                statusCircle.style.backgroundColor = "red";
+                statusText.textContent = "Desconectado de Firebase";
+            }
+        }
+
+        // Ejecutar al cargar la página
+        checkFirebaseConnection();
     </script>
 </body>
 </html>

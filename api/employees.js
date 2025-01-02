@@ -10,6 +10,10 @@ app.use(bodyParser.json());
 app.post("/api/employees", async (req, res) => {
   const { id, nombre, email } = req.body;
 
+  if (!id || !nombre) {
+    return res.status(400).json({ message: "ID y nombre son obligatorios." });
+  }
+
   try {
     // Generar datos del QR
     const qrData = `${id};entry`; // El QR contendrá el ID del empleado
@@ -26,7 +30,8 @@ app.post("/api/employees", async (req, res) => {
 
     res.status(200).json({ message: "Empleado registrado y QR generado.", qrCode });
   } catch (error) {
-    res.status(500).json({ message: "Error al registrar empleado.", error });
+    console.error("Error al registrar empleado:", error); // Log para depuración
+    res.status(500).json({ message: "Error interno del servidor.", error: error.message });
   }
 });
 

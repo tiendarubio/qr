@@ -10,12 +10,15 @@ app.post("/api/employees", async (req, res) => {
   const { id, nombre, email } = req.body;
 
   try {
-    // Crear documento en la colección `employees`
+    if (!id || !nombre) {
+      throw new Error("El ID y el nombre son obligatorios");
+    }
+
     const ref = db.collection("employees").doc(id);
     await ref.set({
       id,
       nombre,
-      email,
+      email: email || null,
       createdAt: new Date().toISOString(),
     });
 
@@ -29,11 +32,10 @@ app.post("/api/employees", async (req, res) => {
 // Obtener la lista de empleados
 app.get("/api/employees", async (req, res) => {
   try {
-    // Consultar todos los documentos en la colección `employees`
     const snapshot = await db.collection("employees").get();
 
     if (snapshot.empty) {
-      res.status(200).json([]); // Si no hay documentos, devolver un arreglo vacío
+      res.status(200).json([]);
       return;
     }
 

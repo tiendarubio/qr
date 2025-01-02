@@ -54,7 +54,6 @@
     </div>
 
     <script>
-        // Función para registrar empleado
         document.getElementById("employeeForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -83,41 +82,39 @@
             }
         });
 
-        // Función para cargar empleados
         async function loadEmployees() {
             try {
                 const response = await fetch("/api/employees");
-                if (response.ok) {
-                    const employees = await response.json();
-
-                    const employeeList = document.getElementById("employeeList");
-                    employeeList.innerHTML = "";
-
-                    employees.forEach((employee) => {
-                        const col = document.createElement("div");
-                        col.className = "col-md-4 mb-4";
-                        col.innerHTML = `
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">${employee.nombre}</h5>
-                                    <p class="card-text">ID: ${employee.id}</p>
-                                    <p class="card-text">Email: ${employee.email}</p>
-                                </div>
-                            </div>
-                        `;
-                        employeeList.appendChild(col);
-                    });
-                } else {
+                if (!response.ok) {
                     const errorData = await response.json();
                     alert("Error: " + errorData.message);
+                    return;
                 }
+
+                const employees = await response.json();
+                const employeeList = document.getElementById("employeeList");
+                employeeList.innerHTML = "";
+
+                employees.forEach((employee) => {
+                    const col = document.createElement("div");
+                    col.className = "col-md-4 mb-4";
+                    col.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">${employee.nombre}</h5>
+                                <p class="card-text">ID: ${employee.id}</p>
+                                <p class="card-text">Email: ${employee.email || "N/A"}</p>
+                            </div>
+                        </div>
+                    `;
+                    employeeList.appendChild(col);
+                });
             } catch (error) {
-                console.error("Error al obtener empleados:", error);
+                console.error("Error al cargar empleados:", error);
                 alert("Error de conexión con el servidor.");
             }
         }
 
-        // Cargar empleados al inicio
         loadEmployees();
     </script>
 </body>
